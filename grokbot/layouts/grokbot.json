@@ -68,7 +68,7 @@
           "id": "thread-head",
           "type": "block",
           "size": {
-            "px": 64
+            "px": 44
           },
           "window_drag": true,
           "content": {

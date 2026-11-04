@@ -189,18 +189,18 @@ function renameButton(id, tab) {
     .child(svg("mods/grokbot/rename.svg").size(14));
 }
 
-function pill(id, label, onClick, solid = false) {
+function pill(id, label, onClick, solid = false, compact = false) {
   return own(h_flex())
     .id(id)
     .flex_none()
-    .h(32)
-    .px(14)
+    .h(compact ? 26 : 32)
+    .px(compact ? 10 : 14)
     .gap(6)
     .items_center()
     .justify_center()
     .rounded_full()
     .cursor_pointer()
-    .text_size(13)
+    .text_size(compact ? 12 : 13)
     .font_semibold()
     .when(solid, (el) => el.bg(C.text).text_color(C.ink).hover((s) => s.bg(C.white)))
     .when(!solid, (el) => el.border_1().border_color(C.edge).text_color(C.text).hover((s) => s.bg("#ffffff0d")))
@@ -210,38 +210,38 @@ function pill(id, label, onClick, solid = false) {
 
 // The three side-column buttons (Activity, Files, Changes) are one kind of button: outlined and
 // grey while their column is away, filled and white while it is on screen.
-function togglePill(id, label, on, onClick, icon = null) {
+function togglePill(id, label, on, onClick, icon = null, compact = false) {
   return own(h_flex())
     .id(id)
     .flex_none()
-    .h(32)
-    .px(icon === null ? 14 : 12)
-    .gap(6)
+    .h(compact ? 26 : 32)
+    .px(compact ? (icon === null ? 10 : 9) : (icon === null ? 14 : 12))
+    .gap(compact ? 5 : 6)
     .items_center()
     .justify_center()
     .rounded_full()
     .cursor_pointer()
-    .text_size(13)
+    .text_size(compact ? 12 : 13)
     .font_semibold()
     .when(on, (el) => el.bg("#ffffff14").text_color(C.text))
     .when(!on, (el) => el.border_1().border_color(C.edge).text_color(C.muted).hover((s) => s.bg("#ffffff0d").text_color(C.text)))
     .tooltip(`${on ? "Hide" : "Show"} ${label}`)
     .accessibility_label(`${on ? "Hide" : "Show"} ${label}`)
     .on_click((_event, cx) => { cx.stop_propagation(); onClick(); })
-    .when(icon !== null, (el) => el.child(svg(icon).size(14)))
+    .when(icon !== null, (el) => el.child(svg(icon).size(compact ? 12 : 14)))
     .child(label);
 }
 
 // Activity is a column of its own (layout node "activity"), so its pill lights while it shows.
-function activityPill() {
+function activityPill(compact = false) {
   const node = layout()?.children?.find((n) => n.id === "activity");
   const on = Boolean(node && !node.hidden);
-  return togglePill("gb-activity", "Activity", on, () => run("layout.toggle", { id: "activity" }));
+  return togglePill("gb-activity", "Activity", on, () => run("layout.toggle", { id: "activity" }), null, compact);
 }
 
 // Files and Changes share the right sidebar (layout nodes "panel" / "panel-body"),
 // the way Herdr's own tab bar switches them: clicking the shown one hides the panel.
-function panelPill(id, label, icon) {
+function panelPill(id, label, icon, compact = false) {
   const panel = layout()?.children?.find((n) => n.id === "panel");
   const body = panel?.children?.find((n) => n.id === "panel-body");
   const on = Boolean(panel && !panel.hidden && body?.active === id);
@@ -251,7 +251,7 @@ function panelPill(id, label, icon) {
       run("layout.select", { stack: "panel-body", child: id });
       run("layout.show", { id: "panel" });
     }
-  }, icon);
+  }, icon, compact);
 }
 
 const section = (id, text, extra = "", key = null) =>
@@ -533,67 +533,63 @@ export default class GrokBot extends View {
     const w = window();
     // When the sidebar is hidden, the header sits beneath the macOS window buttons.
     const lightsPadding = w?.platform === "macos" && w.titlebar === "none" && !w.fullscreen && root?.traffic_lights
-      ? Math.max(22, (root.traffic_lights[0] + 64) / settings().zoom - (sidebarHidden ? 0 : sidebar?.size?.px ?? 0))
-      : 22;
+      ? Math.max(14, (root.traffic_lights[0] + 64) / settings().zoom - (sidebarHidden ? 0 : sidebar?.size?.px ?? 0))
+      : 14;
     const sidebarLabel = sidebarHidden ? "Show sidebar" : "Hide sidebar";
     const a = current();
     const tab = spaces().find((s) => s.active)?.tabs.find((t) => t.active);
     const pane = panes().find((p) => p.terminal === (focused()?.shown ?? focused()?.terminal)) ?? (a && panes().find((p) => p.terminal === a.address));
     const space = spaces().find(s => s.id === (a?.space ?? focused()?.space));
-    const where = [machineName(space?.machine), folder(pane?.cwd, space?.machine), pane?.branch].filter(Boolean).join(" · ");
+    const title = a ? nameOf(a) : tab?.named ? tab.name : "New thread";
+    const where = [a ? addrLabel(a) : null, machineName(space?.machine), folder(pane?.cwd, space?.machine), pane?.branch].filter(Boolean).join(" · ");
     return h_flex()
       .size_full()
-      .px(22)
+      .px(14)
       .pl(lightsPadding)
-      .gap(12)
+      .gap(8)
       .items_center()
       .border_b(1)
       .border_color(C.line)
       .text_color(C.text)
-      .child(own(div()).id("gb-sidebar-toggle").flex_none().size(32).rounded(8)
+      .child(own(div()).id("gb-sidebar-toggle").flex_none().size(26).rounded(7)
         .flex().items_center().justify_center().text_color(sidebarHidden ? C.dim : C.text)
         .hover(s => s.bg(C.raised).text_color(C.text)).cursor_pointer()
         .tooltip(sidebarLabel).accessibility_label(sidebarLabel)
         .on_click((_event, cx) => { cx.stop_propagation(); run("layout.toggle", { id: "sidebar" }); })
-        .child(svg("mods/grokbot/sidebar.svg").size(18)))
-      .child(avatar(a, 36))
+        .child(svg("mods/grokbot/sidebar.svg").size(16)))
+      .child(avatar(a, 26))
       .child(
-        v_flex()
+        // One line: the thread's name, then where it is, so the header stays out of the way.
+        h_flex()
           .flex_1()
           .min_w(0)
-          .gap(2)
-          .child(
-            h_flex()
-              .min_w(0)
-              .gap(0)
-              .items_baseline()
-              .child(div().min_w(0).text_size(15).font_semibold().text_color(C.text).truncate().child(a ? nameOf(a) : tab?.named ? tab.name : "New thread")),
-          )
-          .child(div().text_size(12).text_color(C.dim).truncate().tooltip(a ? fullId(a) : where)
-            .child(a ? `${addrLabel(a)} · ${where}` : where)),
+          .gap(8)
+          .items_center()
+          .child(div().flex_none().max_w(320).text_size(14).font_semibold().text_color(C.text).truncate().child(title))
+          .child(div().min_w(0).text_size(11).text_color(C.dim).truncate().tooltip(a ? fullId(a) : where).child(where)),
       )
       .when(Boolean(a), (el) =>
         el.child(
           h_flex()
             .flex_none()
-            .h(26)
-            .px(11)
-            .gap(7)
+            .h(24)
+            .px(9)
+            .gap(6)
             .items_center()
             .rounded_full()
             .bg(st(a.status).color + "22")
-            .child(statusDot(a.status, 7))
-            .child(div().text_size(12).font_semibold().text_color(st(a.status).color).child(a.status === "working" ? "Working" : a.status === "blocked" ? "Needs you" : a.status === "done" ? "Done" : "Idle")),
+            .child(statusDot(a.status, 6))
+            .child(div().text_size(11).font_semibold().text_color(st(a.status).color).child(a.status === "working" ? "Working" : a.status === "blocked" ? "Needs you" : a.status === "done" ? "Done" : "Idle")),
         ),
       )
       .when(Boolean(a?.tab ?? tab?.id), (el) =>
-        el.child(pill("gb-rename-current", "Rename", () => renameTab(a?.tab ?? tab?.id))),
+        el.child(pill("gb-rename-current", "Rename", () => renameTab(a?.tab ?? tab?.id), false, true)),
       )
-      .child(pill("gb-split", "Computer", () => run("pane.split", { direction: "right" })))
-      .child(activityPill())
+      .child(pill("gb-split", "Computer", () => run("pane.split", { direction: "right" }), false, true))
+      .child(activityPill(true))
       .when(Boolean(layout()?.children?.some((n) => n.id === "panel")), (el) =>
-        el.child(panelPill("files", "Files", "mods/files/file.svg"))
-          .child(panelPill("changes", "Changes", "mods/changes/changes.svg")),
+        el.child(panelPill("files", "Files", "mods/files/file.svg", true))
+          .child(panelPill("changes", "Changes", "mods/changes/changes.svg", true)),
       );
   }
 
