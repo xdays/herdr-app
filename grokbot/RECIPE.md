@@ -41,15 +41,17 @@ thread), separated by 1px `#1f1f25` dividers. The window draws its own chrome: r
      26px "⌘" tile, the workspace name 13px semibold and "hogwarts · 2 workspaces" 11px dim
      under it.
 2. **The thread, the rest of the width.** No resize handle to the sidebar, 14px gutter.
-   * **Header card, 64px**, `#101014`, 1px bottom border `#24242b`: a 32px sidebar-toggle button,
-     the current Bot's 36px avatar, its name 15px semibold, and under it 12px dim
-     `t1j · hogwarts · ~/Workspace/app · main`. On the right: a status chip (26px, fully rounded,
-     12px semibold, tinted with the status color at 13% `22` alpha, with a 7px dot), then five
-     pills in two groups. "Rename" and "Computer" are plain actions: white text on a 1px
-     `#34343c` outline. "Activity", "Files" and "Changes" are the three side-column buttons, one
-     look and one rule between them: grey text `#a1a1aa` on the same outline while their column is
-     away, filled `#ffffff14` with white text while it is on screen — "Activity" for the Activity
-     column, "Files" / "Changes" for the panel the right sidebar is showing.
+   * **Header card, 44px**, `#101014`, 1px bottom border `#24242b`, one line: a 26px
+     sidebar-toggle button, the current Bot's 26px avatar, its name 14px semibold (capped at
+     320px) and right after it, on the same line, 11px dim
+     `t1j · hogwarts · ~/Workspace/app · main`. On the right: a status chip (24px, fully rounded,
+     11px semibold, tinted with the status color at 13% `22` alpha, with a 6px dot), then five
+     26px pills (12px semibold) in two groups. "Rename" and "Computer" are plain actions: white
+     text on a 1px `#34343c` outline. "Activity", "Files" and "Changes" are the three
+     side-column buttons, one look and one rule between them: grey text `#a1a1aa` on the same
+     outline while their column is away, filled `#ffffff14` with white text while it is on
+     screen — "Activity" for the Activity column, "Files" / "Changes" for the panel the right
+     sidebar is showing.
    * **The conversation:** the active tab's terminals as cards, 10px gaps, 14px radius, 1px
      `#24242b` border that turns `#3a3a44` when focused, on `#101014`. Terminals use Geist Mono
      13px with 18/14 padding. A one-pane tab is framed too (`lone: false`).
@@ -164,7 +166,7 @@ picture at `layouts/grokbot.svg`, a 320×200 flat drawing of the window in the s
   1. `sidebar` — `block`, `size {px: 268}`, `min` 200, `max` 420, `window_drag: true`,
      `background #0b0b0e`, `content {mod: "grokbot", props: {role: "sidebar"}}`.
   2. `thread` — `column`, `resizable: false`, `background #101014`, children:
-     `thread-head` (`block`, 64px, `window_drag: true`, props `{role: "header"}`),
+     `thread-head` (`block`, 44px, `window_drag: true`, props `{role: "header"}`),
      `conversation` (`block`, `padding [0, 14]`, `content {tab: "active", pane: {gap: 10,
      radius: 14, background: "#101014", lone: false, border {width 1, color "#24242b"},
      focus {width 1, color "#3a3a44"}}}`),
@@ -218,7 +220,7 @@ picture at `layouts/grokbot.svg`, a 320×200 flat drawing of the window in the s
   A build that uses `theme()` colors will drift from the picture.
 * **macOS window buttons sit over the sidebar.** With `titlebar: "none"` the layout must leave
   room: a 44px spacer above the wordmark, `traffic_lights: [18, 20]`, and in the header a left
-  padding computed as `max(22, (18 + 64) / zoom - sidebarWidth)` when the sidebar is hidden, so
+  padding computed as `max(14, (18 + 64) / zoom - sidebarWidth)` when the sidebar is hidden, so
   the toggle button does not land under the buttons.
 * **`pane.focus` needs a pane.** Not every agent has one (sub-agents don't). The sidebar checks
   `panes().some(p => p.terminal === address)` first; a build that calls it blindly throws.
@@ -232,7 +234,7 @@ picture at `layouts/grokbot.svg`, a 320×200 flat drawing of the window in the s
   workspace picker take a `focus_handle` in `init` and `track_focus` it; the app-wide
   `cmd-1..9` (tab select) still works outside overlays. Skip the focus handle and the menu's
   shortcuts die.
-* **Sizes are tuned, not resilient.** Sidebar 268, Activity 300, Files sidebar 340, header 64,
+* **Sizes are tuned, not resilient.** Sidebar 268, Activity 300, Files sidebar 340, header 44,
   composer 96. The mod cannot measure its own block, so on a narrow window the Activity column is
   the first thing to fold (it can be hidden) and the Files sidebar the second — the sidebar's
   min 200 keeps the Bot rows readable.
