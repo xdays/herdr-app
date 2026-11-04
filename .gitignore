@@ -1,0 +1,9 @@
+# Herdr writes these beside every mod it loads, and into every mod folder
+# `herdr-app check` looks at. They are version-specific and regenerated at
+# start, so they are not source.
+gpui-kit.d.ts
+herdr.d.ts
+jsconfig.json
+
+# PR worktrees (see the layout repo convention: one branch per change)
+.worktree/
